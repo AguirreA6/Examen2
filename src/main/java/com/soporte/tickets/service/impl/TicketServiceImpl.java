@@ -56,6 +56,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TicketResponse> findAll(UserDetails currentUser) {
         User user = getUser(currentUser.getUsername());
 
@@ -69,6 +70,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TicketResponse findById(Long id, UserDetails currentUser) {
         Ticket ticket = getTicket(id);
         User user = getUser(currentUser.getUsername());
@@ -141,14 +143,8 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = getTicket(id);
         User user = getUser(currentUser.getUsername());
 
-        // USUARIO solo puede cerrar sus propios tickets
         if (user.getRole() == Role.USUARIO) {
-            if (!ticket.getCreadoPor().getId().equals(user.getId())) {
-                throw new AccessDeniedException("No tiene permiso para cambiar el estado de este ticket");
-            }
-            if (request.getStatus() != TicketStatus.CERRADO) {
-                throw new BadRequestException("Los usuarios solo pueden cerrar tickets");
-            }
+            throw new AccessDeniedException("Solo ADMIN y TECNICO pueden cambiar el estado del ticket");
         }
 
         ticket.setStatus(request.getStatus());
@@ -159,24 +155,28 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TicketResponse> findByStatus(TicketStatus status) {
         return ticketRepository.findByStatus(status).stream()
                 .map(this::mapToResponse).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TicketResponse> findByPriority(Priority prioridad) {
         return ticketRepository.findByPrioridad(prioridad).stream()
                 .map(this::mapToResponse).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TicketResponse> findSinAsignar() {
         return ticketRepository.findTicketsSinAsignar().stream()
                 .map(this::mapToResponse).toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TicketResponse> findMisTickets(UserDetails currentUser) {
         User user = getUser(currentUser.getUsername());
         if (user.getRole() == Role.TECNICO) {
@@ -206,8 +206,8 @@ public class TicketServiceImpl implements TicketService {
                 .prioridad(ticket.getPrioridad())
                 .categoriaId(ticket.getCategoria() != null ? ticket.getCategoria().getId() : null)
                 .categoriaNombre(ticket.getCategoria() != null ? ticket.getCategoria().getNombre() : null)
-                .creadoPorId(ticket.getCreadoPor().getId())
-                .creadoPorUsername(ticket.getCreadoPor().getUsername())
+                .creadoPorId(ticket.getCreadoPor() != null ? ticket.getCreadoPor().getId() : null)
+                .creadoPorUsername(ticket.getCreadoPor() != null ? ticket.getCreadoPor().getUsername() : null)
                 .asignadoAId(ticket.getAsignadoA() != null ? ticket.getAsignadoA().getId() : null)
                 .asignadoAUsername(ticket.getAsignadoA() != null ? ticket.getAsignadoA().getUsername() : null)
                 .asignadoANombreCompleto(ticket.getAsignadoA() != null
