@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { setToken } from './auth'
 
 type Props = { onLogin: (token: string) => void }
 
@@ -22,6 +23,7 @@ export default function Login({ onLogin }: Props) {
       }
       const token = body.data?.token
       if (!token) throw new Error('Token no presente')
+      setToken(token)
       onLogin(token)
     } catch (err: any) {
       setError(err.message)
