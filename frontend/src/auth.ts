@@ -1,4 +1,3 @@
-// Minimal JWT utilities (no external deps)
 export type JwtPayload = {
   sub?: string;
   exp?: number;

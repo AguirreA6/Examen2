@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { getAuthHeader, removeToken } from './auth'
+import TicketsList from './TicketsList'
 
 type Props = { onLogout: () => void; user?: any }
 
 export default function Protected({ onLogout, user }: Props) {
   const [output, setOutput] = useState<string>('Sin datos')
+  const [showList, setShowList] = useState(false)
 
   useEffect(() => {
     if (!user) {
-      // if no user info, force logout
       onLogout()
     }
   }, [user])
@@ -20,7 +21,6 @@ export default function Protected({ onLogout, user }: Props) {
         headers: getAuthHeader()
       })
       if (res.status === 401 || res.status === 403) {
-        // unauthenticated
         removeToken()
         onLogout()
         return
@@ -37,11 +37,12 @@ export default function Protected({ onLogout, user }: Props) {
     <div style={{padding:16}}>
       <h2>Área Protegida</h2>
       {user && <p>Conectado como <strong>{user.sub || user.username || user.nombre || 'usuario'}</strong></p>}
-      <div>
+      <div style={{marginBottom:8}}>
         <button onClick={loadTickets}>Cargar mis tickets</button>
+        <button onClick={() => setShowList(s => !s)} style={{marginLeft:8}}>{showList ? 'Ocultar listado' : 'Ver listado'}</button>
         <button onClick={() => { removeToken(); onLogout() }} style={{marginLeft:8}}>Cerrar sesión</button>
       </div>
-      <pre style={{background:'#f6f8fa',padding:12,marginTop:12}}>{output}</pre>
+      {showList ? <TicketsList /> : <pre style={{background:'#f6f8fa',padding:12,marginTop:12}}>{output}</pre>}
     </div>
   )
 }
